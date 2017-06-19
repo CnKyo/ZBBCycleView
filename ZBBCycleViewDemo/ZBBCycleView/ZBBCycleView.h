@@ -8,9 +8,20 @@
 
 #import <UIKit/UIKit.h>
 
+@protocol ZBBCyleViewCellDelegate <NSObject>
+
+@required
+-(void)fillData:(id)data;
+
+@end
+
+@class ZBBCycleView;
+
 typedef void(^ ZBBCycleViewDidSelectCompletion)(NSUInteger index); // 被选中cell的index
-typedef UICollectionViewCell *(^ ZBBCycleViewCellAtIndexPath)(NSIndexPath *indexPath,
-                                                            UICollectionView *collectionView); // 自定义cell
+typedef UICollectionViewCell<ZBBCyleViewCellDelegate> *(^ ZBBCycleViewCellAtIndexPath)(NSIndexPath *indexPath,
+                                                            UICollectionView *collectionView,
+                                                            NSString *cellID); // 自定义cell
+typedef CGSize(^ZBBCycleViewItemSize)(ZBBCycleView *cycleView);
 
 
 /**
@@ -20,9 +31,11 @@ typedef UICollectionViewCell *(^ ZBBCycleViewCellAtIndexPath)(NSIndexPath *index
  */
 @interface ZBBCycleView : UIView
 
+@property (nonatomic, strong, readonly) UICollectionViewFlowLayout *flowLayout;
 @property (nonatomic, strong) NSArray<NSString *> *dataSource; // 数据源,封面图片链接
 @property (nonatomic, assign) BOOL autoPlay; // default YES;
 @property (nonatomic, assign) BOOL loop; // 是否循环，default YES
+@property (nonatomic, assign) BOOL pageHide; // default NO
 @property (nonatomic, assign) NSTimeInterval showTime; // 展示时间，default 3秒
 @property (nonatomic, copy) ZBBCycleViewDidSelectCompletion didSelectCompletion;
 
@@ -31,5 +44,12 @@ typedef UICollectionViewCell *(^ ZBBCycleViewCellAtIndexPath)(NSIndexPath *index
  通过这个属性，可以自定义cell样式
  */
 @property (nonatomic, copy) ZBBCycleViewCellAtIndexPath cellAtIndexPath;
+@property (nonatomic, copy) ZBBCycleViewItemSize itemSize;
 
+/**
+ 自定义cell注册
+ 
+ @param cellClass cellClass
+ */
+-(void)registerClass:(Class<ZBBCyleViewCellDelegate>)cellClass;
 @end

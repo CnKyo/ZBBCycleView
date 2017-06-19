@@ -11,7 +11,9 @@
 #import <SDWebImage/UIImageView+WebCache.h>
 
 static NSString *const kCellID = @"flashViewCellID";
-CGFloat kMaxSection = 100;
+static NSString *const kOverCellID = @"overFlashViewCellID";
+
+static CGFloat kMaxSection = 100;
 
 @interface CTFlashViewCell : UICollectionViewCell
 
@@ -92,7 +94,8 @@ UICollectionViewDataSource>
         [self stopLoopTimer];
     }
     
-    if (self.dataSource.count > 0) {
+    if (self.dataSource.count > 0 &&
+        self.contentView.contentOffset.x == 0) {
         [self.contentView scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:0
                                                                      inSection:self.contentView.numberOfSections/2]
                                  atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally
@@ -170,8 +173,12 @@ UICollectionViewDataSource>
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     if (_cellAtIndexPath) {
-        return _cellAtIndexPath(indexPath, collectionView);
+        UICollectionViewCell<ZBBCyleViewCellDelegate> *cell = _cellAtIndexPath(indexPath, collectionView, kOverCellID);
+        [cell fillData:self.dataSource[indexPath.item]];
+        
+        return cell;
     }
+
     
     CTFlashViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:kCellID
                                                                       forIndexPath:indexPath];
@@ -198,7 +205,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
 - (CGSize)collectionView:(UICollectionView *)collectionView
                   layout:(UICollectionViewLayout*)collectionViewLayout
   sizeForItemAtIndexPath:(NSIndexPath *)indexPath{
-//    return CGSizeMake(collectionView.ct_width, collectionView.ct_height);
+    if (_itemSize) {
+        return _itemSize(self);
+    }
     return CGSizeMake(collectionView.bounds.size.width,
                       collectionView.bounds.size.height);
 }
@@ -214,7 +223,12 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{
-    int page = (int)(scrollView.contentOffset.x / scrollView.bounds.size.width + 0.5) % self.dataSource.count;
+    int page = 0;
+    if (self.dataSource.count == 0) {
+        self.pageControl.currentPage = page;
+        return;
+    }
+    page = (int)(scrollView.contentOffset.x / scrollView.bounds.size.width + 0.5) % self.dataSource.count;
     self.pageControl.currentPage = page;
 }
 #pragma mark - ☸getter and setter
@@ -237,6 +251,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
         _contentView.showsHorizontalScrollIndicator = NO;
         _contentView.pagingEnabled = YES;
         _contentView.backgroundColor = [UIColor whiteColor];
+        
+        _flowLayout = flowLayout;
     }
     
     return _contentView;
@@ -259,6 +275,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
     _dataSource = dataSource;
     [_contentView reloadData];
     [_pageControl setNumberOfPages:dataSource.count];
+    [self stopLoopTimer];
+    [self startLoopTimer];
 }
 
 -(void)setAutoPlay:(BOOL)autoPlay{
@@ -288,6 +306,25 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
         return;
     }
     _loop = loop;
+    [_contentView reloadData];
+}
+-(void)setPageHide:(BOOL)pageHide{
+    if (_pageHide == pageHide) {
+        return;
+    }
+    
+    _pageControl.hidden = pageHide;
+}
+
+-(void)setBackgroundColor:(UIColor *)backgroundColor{
+    _contentView.backgroundColor = backgroundColor;
+}
+
+-(void)setFlowLayout:(UICollectionViewFlowLayout *)flowLayout{
+    if ([_flowLayout isEqual:flowLayout]) {
+        return;
+    }
+    _contentView.collectionViewLayout = _flowLayout;
     [_contentView reloadData];
 }
 @end

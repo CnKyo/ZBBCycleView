@@ -23,7 +23,7 @@
     [super viewDidLoad];
     
     [self.view addSubview:self.flashView];
-    
+    self.flashView.frame = CGRectMake(0, 0, self.view.bounds.size.width, 200);
     __weak typeof(self) weakSelf = self;
     [self.flashView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.left.right.top.equalTo(weakSelf.view);
