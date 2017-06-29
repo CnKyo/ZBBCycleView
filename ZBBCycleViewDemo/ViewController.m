@@ -39,6 +39,7 @@
 -(ZBBCycleView *)flashView{
     if (!_flashView) {
         _flashView = [[ZBBCycleView alloc] init];
+        _flashView.scrollDirection = CTCycleViewScrollDirectionVertical;
     }
     
     return _flashView;
